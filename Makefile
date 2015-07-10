@@ -1,4 +1,4 @@
-#
+# Depricated, system now uses cMakelists
 # skipfish - Makefile
 # -------------------
 #
