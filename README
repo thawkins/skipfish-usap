@@ -1,6 +1,19 @@
 ===========================================
-skipfish - web application security scanner
+skipfish-usap - web application security scanner
 ===========================================
+
+NOTE NOTE NOTE NOTE =======================
+This version of skipfish has been modified by USAutoparts Inc to support
+parts of our internal QA process, we make no claims to this software and
+release all changes under the terms of the original license.
+
+Additional functionality has been added and the package has been converted to work
+with libidn2 instead of the original libidn
+
+Additionally the build system has been converted to use cMake, we use Jetbrains cLion
+internally for working on this package.
+
+NOTE NOTE NOTE NOTE =======================
 
   http://code.google.com/p/skipfish/
 
@@ -9,6 +22,8 @@ skipfish - web application security scanner
       Michal Zalewski <lcamtuf@google.com>
       Niels Heinen <heinenn@google.com>
       Sebastian Roschke <s.roschke@googlemail.com>
+
+      USAP extensions by Tim Hawkins <tim.thawkins@gmail.com>
 
   * Copyright 2009 - 2012 Google Inc, rights reserved.
 
@@ -235,8 +250,26 @@ behavior there.
 5. How to run the scanner?
 --------------------------
 
-To compile it, simply unpack the archive and try make. Chances are, you will
-need to install libidn first.
+To compile it, you will first need the following libraries installed
+
+libcrypto
+libssl
+libidn2
+libz
+libpcre
+
+you will also need the *-devel versions of above to ensure that the required header
+files are available
+
+to Compile the package just
+
+cd [root dir]
+cd build
+ccmake ..
+make
+
+you will then find the executables in the bin folder as  build/bin/skipfish
+
 
 Next, you need to read the instructions provided in doc/dictionaries.txt
 to select the right dictionary file and configure it correctly. This step has a 
@@ -247,7 +280,7 @@ and -W to specify an initially empty file for any newly learned site-specific
 keywords (which will come handy in future assessments):
 
 $ touch new_dict.wl
-$ ./skipfish -o output_dir -S existing_dictionary.wl -W new_dict.wl \
+$ ./build/bin/skipfish -o output_dir -S existing_dictionary.wl -W new_dict.wl \
   http://www.example.com/some/starting/path.txt
 
 You can use -W- if you don't want to store auto-learned keywords anywhere.
@@ -256,7 +289,7 @@ Note that you can provide more than one starting URL if so desired; all of
 them will be crawled. It is also possible to read URLs from file, using
 the following syntax:
 
-$ ./skipfish [...other options...] @../path/to/url_list.txt
+$ ./build/bin/skipfish [...other options...] @../path/to/url_list.txt
 
 The tool will display some helpful stats while the scan is in progress. You
 can also switch to a list of in-flight HTTP requests by pressing return.
@@ -287,7 +320,7 @@ you can combat this in two ways: by using the -N option, which causes
 the scanner to reject attempts to set or delete cookies; or with the -X
 parameter, which prevents matching URLs from being fetched:
 
-$ ./skipfish -X /logout/logout.aspx ...other parameters...
+$ ./build/bin/skipfish -X /logout/logout.aspx ...other parameters...
 
 The -X option is also useful for speeding up your scans by excluding /icons/,
 /doc/, /manuals/, and other standard, mundane locations along these lines. In
@@ -295,7 +328,7 @@ general, you can use -X and -I (only spider URLs matching a substring) to
 limit the scope of a scan any way you like - including restricting it only to
 a specific protocol and port:
 
-$ ./skipfish -I http://example.com:1234/ ...other parameters...
+$ ./build/bin/skipfish -I http://example.com:1234/ ...other parameters...
 
 A related function, -K, allows you to specify parameter names not to fuzz
 (useful for applications that put session IDs in the URL, to minimize noise).
@@ -305,18 +338,18 @@ hosts or domains to consider in-scope for the test. By default, all hosts
 appearing in the command-line URLs are added to the list - but you can use -D
 to broaden these rules, for example:
 
-$ ./skipfish -D test2.example.com -o output-dir http://test1.example.com/
+$ ./build/bin/skipfish -D test2.example.com -o output-dir http://test1.example.com/
 
 ...or, for a domain wildcard match, use:
 
-$ ./skipfish -D .example.com -o output-dir http://test1.example.com/
+$ ./build/bin/skipfish -D .example.com -o output-dir http://test1.example.com/
 
 In some cases, you do not want to actually crawl a third-party domain, but
 you trust the owner of that domain enough not to worry about cross-domain
 content inclusion from that location. To suppress warnings, you can use the
 -B option, for example:
 
-$ ./skipfish -B .google-analytics.com -B .googleapis.com ...other
+$ ./build/bin/skipfish -B .google-analytics.com -B .googleapis.com ...other
 parameters...
 
 By default, skipfish sends minimalistic HTTP headers to reduce the amount of
@@ -445,21 +478,21 @@ A standard, authenticated scan of a well-designed and self-contained site
 issues), including gentle brute-force:
 
 $ touch new_dict.wl
-$ ./skipfish -MEU -S dictionaries/minimal.wl -W new_dict.wl \
+$ ./build/bin/skipfish -MEU -S dictionaries/minimal.wl -W new_dict.wl \
   -C "AuthCookie=value" -X /logout.aspx -o output_dir \
   http://www.example.com/
 
 Five-connection crawl, but no brute-force; pretending to be MSIE and
 trusting example.com content:
 
-$ ./skipfish -m 5 -L -W- -o output_dir -b ie -B example.com \
+$ ./build/bin/skipfish -m 5 -L -W- -o output_dir -b ie -B example.com \
   http://www.example.com/
 
 Heavy brute force only (no HTML link extraction), limited to a single
 directory and timing out after 5 seconds:
 
 $ touch new_dict.wl
-$ ./skipfish -S dictionaries/complete.wl -W new_dict.wl \
+$ ./build/bin/skipfish -S dictionaries/complete.wl -W new_dict.wl \
    -P -I http://www.example.com/dir1/ -o output_dir -t 5 -I \
   http://www.example.com/dir1/
 
@@ -553,7 +586,7 @@ $ make clean debug
 
 ...and re-run it this way:
 
-$ ./skipfish [...previous options...] 2>logfile.txt
+$ ./build/bin/skipfish [...previous options...] 2>logfile.txt
 
 You can then inspect logfile.txt to get an idea what went wrong; if it looks
 like a scanner problem, please scrub any sensitive information from the log
@@ -562,7 +595,7 @@ file and send it to the author.
 If the scanner crashed, please recompile it as indicated above, and then type:
 
 $ ulimit -c unlimited
-$ ./skipfish [...previous options...] 2>logfile.txt
+$ ./build/bin/skipfish [...previous options...] 2>logfile.txt
 $ gdb --batch -ex back ./skipfish core
 
 ...and be sure to send the author the output of that last command as well.
