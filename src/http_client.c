@@ -37,7 +37,7 @@
 #include <openssl/ssl.h>
 #include <openssl/x509v3.h>
 #include <openssl/err.h>
-#include <idna.h>
+#include <idn2.h>
 #include <zlib.h>
 
 #include "types.h"
@@ -297,17 +297,17 @@ u8 parse_url(u8* url, struct http_request* req, struct http_request* ref) {
 
     if (has_utf) {
 
-      char* output = 0;
+      u8* output = 0;
 
-      if (idna_to_ascii_8z((char*)host, &output, 0) != IDNA_SUCCESS ||
-          strlen(output) > MAX_DNS_LEN) {
+      if (idn2_lookup_u8(host, &output, 0) != IDN2_OK ||
+          strlen((char*)output) > MAX_DNS_LEN) {
         ck_free(host);
         free(output);
         return 1;
       }
 
       ck_free(host);
-      host = ck_strdup((u8*)output);
+      host = ck_strdup(output);
       free(output);
 
     }

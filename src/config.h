@@ -23,6 +23,8 @@
 #ifndef _HAVE_CONFIG_H
 #define _HAVE_CONFIG_H
 
+#define VERSION                 "2.20a"
+
 #define USE_COLOR               1       /* Use terminal colors             */
 
 #define SHOW_SPLASH             1       /* Annoy user with a splash screen */
