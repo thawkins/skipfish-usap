@@ -265,7 +265,7 @@ to Compile the package just
 
 cd [root dir]
 cd build
-ccmake ..
+cmake ..
 make
 
 you will then find the executables in the bin folder as  build/bin/skipfish
